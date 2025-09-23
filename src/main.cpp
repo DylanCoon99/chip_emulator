@@ -88,11 +88,11 @@ int main() {
 	*/
     
     Emulator myEmulator;
-    
-    myEmulator.addressSpaceSize = 10;
+
     
     std::cout << myEmulator.addressSpaceSize << std::endl;
 
+    myEmulator.LoadROM();
     
     return 0;
 	
