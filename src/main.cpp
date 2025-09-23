@@ -1,4 +1,5 @@
-#include <stdio.h>
+#include <iostream>
+#include "../include/Emulator.h"
 
 
 /* CHIP 8 Emulator Notes
@@ -69,12 +70,31 @@ Have a struct containing the registers and their current values
 malloc a chunk of memory (4kb), partition it
 
 
-*/
+g++ -Wall -Werror -Weffc++ -Wextra -Wconversion -Wsign-conversion main.cpp -o main
+ 
+ 
+ */
+
+
+
+
 
 
 
 int main() {
 
+	/*
+		Initialize memory, load the ROM file into memory, initialize control flow registers (PC)
+	*/
+    
+    Emulator myEmulator;
+    
+    myEmulator.addressSpaceSize = 10;
+    
+    std::cout << myEmulator.addressSpaceSize << std::endl;
+
+    
+    return 0;
 	
 
 }
