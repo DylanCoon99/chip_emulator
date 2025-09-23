@@ -1,5 +1,6 @@
 #include <iostream>
 #include "../include/Emulator.h"
+#include "../include/Display.h"
 
 
 /* CHIP 8 Emulator Notes

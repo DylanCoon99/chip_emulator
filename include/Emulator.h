@@ -53,7 +53,7 @@ public:
         addressSpaceSize = size;
         
         // Initialize the registers
-        Registers registers;
+        [[maybe_unused]]Registers registers;
         
         
         // Initialize the address space
