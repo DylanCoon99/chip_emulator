@@ -3,7 +3,7 @@ DEBUG_FLAG ?= 0
 
 CXX = g++
 CXXFLAGS = -Wall -Wextra -Werror -Weffc++ -Wconversion -Wsign-conversion -std=c++17
-##LIBS = -I/opt/homebrew/include -L/opt/homebrew/lib -lSDL2 -libSDL2_image -framework OpenGL
+LIBS = -I/opt/homebrew/include -L/opt/homebrew/lib -lSDL2 -framework OpenGL
 SOURCES = ./src/main.cpp
 OBJECTS = $(SOURCES:.cpp=.o)
 TARGET = emulator
@@ -18,7 +18,7 @@ endif
 all: $(TARGET)
 
 $(TARGET): $(OBJECTS)
-	$(CXX) $(OBJECTS) -o $(TARGET) ##$(LIBS) -o $(TARGET)
+	$(CXX) $(OBJECTS) -o $(LIBS) -o $(TARGET)
 
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@

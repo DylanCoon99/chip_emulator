@@ -1,6 +1,8 @@
 #include <iostream>
 #include "../include/Emulator.h"
 #include "../include/Display.h"
+#include <chrono>
+#include <thread>
 
 
 /* CHIP 8 Emulator Notes
@@ -94,6 +96,15 @@ int main() {
     std::cout << myEmulator.addressSpaceSize << std::endl;
 
     myEmulator.LoadROM();
+    
+    
+    
+    Display myDisplay;
+    
+    myDisplay.DrawGrid();
+    
+    //std::this_thread::sleep_for(std::chrono::seconds(10));
+    
     
     return 0;
 	
