@@ -84,7 +84,7 @@ g++ -Wall -Werror -Weffc++ -Wextra -Wconversion -Wsign-conversion main.cpp -o ma
 
 
 
-int main() {
+int main(int argc, char* argv[]) {
 
 	/*
 		Initialize memory, load the ROM file into memory, initialize control flow registers (PC)
@@ -95,15 +95,25 @@ int main() {
     
     std::cout << myEmulator.addressSpaceSize << std::endl;
 
-    myEmulator.LoadROM();
+    
+    if (argc < 2) {
+        std::cerr << "Error: not enough arguments." << std::endl;
+        return 1;
+    }
+    
+    std::string programName = argv[1];
+    
+    
+    myEmulator.LoadROM(programName);
     
     
     
     Display myDisplay;
     
+    myDisplay.InitDisplay();
+    
     myDisplay.DrawGrid();
     
-    //std::this_thread::sleep_for(std::chrono::seconds(10));
     
     
     return 0;
