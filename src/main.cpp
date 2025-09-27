@@ -49,6 +49,33 @@ Instruction Set
 	* 7XNN (add value to register VX)
 	* ANNN (set index register I)
 	* DXYN (display draw)
+ 
+ 
+    IBM logo code (and explanation)
+ 
+     00e0 (clear screen)
+     a22a (set I register to 22a)
+     600c (set register V0 to c)
+     6108 (set register V1 to 8)
+     d01f (display at coord (x = V0, y = V1) height = f)
+     7009 (add 9 to V0)
+     a239 (set I register to 239)
+     d01f (display at coord (x = V0, y = V1) height = f)
+     a248 (set I register to 248)
+     7008 (add 8 to V0)
+     d01f (display at coord (x = V0, y = V1) height = f)
+     7004 (add 4 to V0)
+     a257 (set I register to 257)
+     d01f (display at coord (x = V0, y = V1) height = f)
+     7008 (add 8 to V0)
+     a266 (set I register to 266)
+     d01f (display at coord (x = V0, y = V1) height = f)
+     7008 (add 8 to V0)
+     a275 (set I register to 275)
+     d01f (display at coord (x = V0, y = V1) height = f)
+     1228 (jump to address 0x222)
+
+ 
 
 	All instructions
 
@@ -61,6 +88,8 @@ Instruction Set
 	* 3XNN, 4XNN, 5XY0, and 9XY0 skip conditionally
 		- 
 
+ 
+ 
 
 Timing (what speed should the loop run at?)
 
@@ -108,11 +137,17 @@ int main(int argc, char* argv[]) {
     
     
     
-    Display myDisplay;
+    //Display myDisplay;
     
-    myDisplay.InitDisplay();
+    //myDisplay.InitDisplay();
     
-    myDisplay.DrawGrid();
+    //myDisplay.DrawGrid();
+    
+    myEmulator.DisplayAddressSpace(1000); // for debugging
+    
+    myEmulator.Run();
+    
+    //myEmulator.DisplayRegisters();
     
     
     
