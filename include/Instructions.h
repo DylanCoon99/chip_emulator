@@ -9,6 +9,17 @@
 // Instruction typedef
 typedef uint16_t INSTRUCTION;
 
+// Opcode
+typedef int OPCODE;
+
+
+// Instruction Executions
+int ClearScreen() {
+
+    return 0;
+}
+
+
 
 // Instruction Execute Functionality
 int ExecuteInstruction(INSTRUCTION instr) {

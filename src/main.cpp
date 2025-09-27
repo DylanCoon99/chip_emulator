@@ -143,7 +143,7 @@ int main(int argc, char* argv[]) {
     
     //myDisplay.DrawGrid();
     
-    myEmulator.DisplayAddressSpace(1000); // for debugging
+    //myEmulator.DisplayAddressSpace(1000); // for debugging
     
     myEmulator.Run();
     

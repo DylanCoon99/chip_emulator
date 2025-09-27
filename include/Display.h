@@ -1,4 +1,3 @@
-/*
 #ifndef DISPLAY_H
 #define DISPLAY_H
 
@@ -12,17 +11,8 @@
 #include <random>
 
 
-const uint8_t DISPLAY_HEIGHT = 32;
-const uint8_t DISPLAY_WIDTH  = 64;
 
-const uint8_t SPACING        = 20;
-
-const uint16_t ABSOLUTE_HEIGHT = DISPLAY_HEIGHT * SPACING;
-const uint16_t ABSOLUTE_WIDTH  = DISPLAY_WIDTH  * SPACING;  // Find a cleaner way to come up with these constants
-
-
-
-
+/*
 
 class Display{
 public:
@@ -92,28 +82,7 @@ void Display::InitDisplay() {
 }
 
 
-void Display::WriteBlock(int x, int y, int val) {
-    
-    // writes block to white (val = 1) or black (val = 0)
-    
-    int x_start_coord = x * SPACING;
-    int y_start_coord = y * SPACING;
 
-    
-    if (val == 1) {
-        // Set color to white
-        SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-    } else {
-        // Set color to black
-        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-    }
-    
-    // Draw a box on these coordinates
-    SDL_Rect block = {x_start_coord, y_start_coord, SPACING, SPACING};
-    
-    SDL_RenderFillRect(renderer, &block);
-    
-}
 
 
 void Display::DrawGrid() {
@@ -171,3 +140,32 @@ void Display::DrawGrid() {
 
 #endif // !DISPLAY_H
 */
+
+
+
+void Emulator::WriteBlock(int x, int y, int val) {
+    
+    // writes block to white (val = 1) or black (val = 0)
+    
+    int x_start_coord = x * SPACING;
+    int y_start_coord = y * SPACING;
+
+    
+    if (val == 1) {
+        // Set color to white
+        SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+    } else {
+        // Set color to black
+        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+    }
+    
+    // Draw a box on these coordinates
+    SDL_Rect block = {x_start_coord, y_start_coord, SPACING, SPACING};
+    
+    SDL_RenderFillRect(renderer, &block);
+    
+}
+
+
+
+#endif // !DISPLAY_H

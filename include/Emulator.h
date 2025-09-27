@@ -118,21 +118,26 @@ public:
     // Methods
     int LoadROM(std::string& filePath);
     int DisplayAddressSpace(unsigned int maxAddress);
-    int DisplayRegisters();
+    void DisplayRegisters();
     int Run();
     
     
-    //Display display;
+    //Display attributes;
     int displayGrid[DISPLAY_WIDTH][DISPLAY_HEIGHT];
     SDL_Window* window = NULL;
     SDL_Renderer* renderer = NULL;
+    
+    // Display Methods
+    void WriteBlock(int x, int y, int val);
+    
+    // Instruction Methods
+    //int ClearScreen();
     
     
     Emulator(unsigned int size = MEMORY_SIZE) {
         std::cout << "Hi, from the emulator" << std::endl;
         
         addressSpaceSize = size;
-        
         
         // Initialize the address space
         addressSpace = new int[addressSpaceSize];
@@ -180,10 +185,19 @@ int Emulator::Run() {
     int running = 1;
     SDL_Event event;
     
+    //int test_idx = 0;
     
     // * Think about exit conditions for this loop
-    //INSTRUCTION currentInstr;
+    INSTRUCTION currentInstr;
     while (running) {
+        /*
+        // For testing
+        if (test_idx > 100) {
+            running = 0;
+        }
+         */
+         
+        
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_QUIT) {
                 running = 0;
@@ -200,23 +214,103 @@ int Emulator::Run() {
             }
         }
         
+        
         // Fetch next instruction
-        std::cout << "Simulating Fetch Instruction" << std::endl;
-        
-        // Decode the instruction
-        std::cout << "Simulating Decode Instruction" << std::endl;
-        
-        // Execute the instruction
-        std::cout << "Simulating Execute Instruction" << std::endl;
+        std::cout << "Fetch Instruction" << std::endl;
+        currentInstr = static_cast<INSTRUCTION>(addressSpace[registers.PC] << 8 | addressSpace[registers.PC + 1]);
+        std::cout << "Current Instruction: " << std::hex << currentInstr << std::endl;
         
         // Update the program counter
+        registers.PC += 2;
+        
+        // Decode the instruction: Determine the kind of instruction
+        // To get the opcode -> shift 12 bits
+        OPCODE opCode = currentInstr >> 12;
+        std::cout << "Current Instruction Opcode: " << std::hex << opCode << std::endl << std::endl;
+        
+        // Get the last 12 bits of the currentInstr
+        uint16_t restOfInstr = currentInstr & 0xfff;
+        
+        switch(opCode){
+            case 0x0:
+                // handle opcode 0
+                // For now assume it is the clear screen instruction
+                for (int i = 0; i < DISPLAY_WIDTH; i ++) {
+                    for (int j = 0; j < DISPLAY_HEIGHT; j ++) {
+                        WriteBlock(i, j, 1);
+                    }
+                }
+                
+            case 0x1:
+                // handle opcode 1
+                registers.PC = restOfInstr;
+                std::cout << "JUMP ADDRESS: " << std::hex << restOfInstr << std::endl;
+            case 0x2:
+                // handle opcode 2
+                std::cout << "Instruction Not Implemented. Try Again Later." << std::endl;
+            case 0x3:
+                // handle opcode 3
+                std::cout << "Instruction Not Implemented. Try Again Later." << std::endl;
+            case 0x4:
+                // handle opcode 4
+                std::cout << "Instruction Not Implemented. Try Again Later." << std::endl;
+            case 0x5:
+                // handle opcode 5
+                std::cout << "Instruction Not Implemented. Try Again Later." << std::endl;
+            case 0x6:
+                // handle opcode 6
+                break;
+            case 0x7:
+                // handle opcode 7
+                break;
+            case 0x8:
+                // handle opcode 8
+                std::cout << "Instruction Not Implemented. Try Again Later." << std::endl;
+            case 0x9:
+                // handle opcode 9
+                std::cout << "Instruction Not Implemented. Try Again Later." << std::endl;
+            case 0xA:
+                // handle opcode A
+                break;
+            case 0xB:
+                // handle opcode B
+                std::cout << "Instruction Not Implemented. Try Again Later." << std::endl;
+            case 0xC:
+                // handle opcode C
+                std::cout << "Instruction Not Implemented. Try Again Later." << std::endl;
+            case 0xD:
+                // handle opcode D
+                break;
+            case 0xE:
+                // handle opcode E
+                std::cout << "Instruction Not Implemented. Try Again Later." << std::endl;
+            case 0xF:
+                // handle opcode F
+                std::cout << "Instruction Not Implemented. Try Again Later." << std::endl;
+                
+        }
+        
+        // Execute the instruction
+        //std::cout << "Simulating Execute Instruction" << std::endl;
+        
+        
+        
+        // Update the display
+        //std::cout << "Displaying" << std::endl;
+        SDL_RenderPresent(renderer);
+        
+        
         
         
         // wait for 1/60 seconds
         std::this_thread::sleep_for(std::chrono::seconds(1 / FREQUENCY));
         
-        
+        //test_idx += 1;
     }
+    
+    SDL_DestroyRenderer(renderer);
+    SDL_DestroyWindow(window);
+    SDL_Quit();
     
     return 0;
 }
@@ -292,15 +386,12 @@ int Emulator::DisplayAddressSpace(unsigned int maxAddress) {
 
 
 
-int Emulator::DisplayRegisters() {
-    // returns 0 on success, 1 on failure
+void Emulator::DisplayRegisters() {
 
     // Displays all of the registers and their values
     
     registers.display();
 
-
-    return 0;
 }
 
 
