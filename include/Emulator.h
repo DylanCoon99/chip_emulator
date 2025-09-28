@@ -12,6 +12,7 @@
 #include <fstream>
 #include <iostream>
 #include <filesystem>
+#include <bitset>
 //#include "Display.h"
 #include </opt/homebrew/include/SDL2/SDL.h>
 #include "Instructions.h"
@@ -61,22 +62,22 @@ struct Registers {
     void display() {
         std::cout << "PC: " << std::hex << PC << std::endl;
         std::cout << "I:  " << std::hex << I << std::endl;
-        std::cout << "V0: " << std::hex << V0 << std::endl;
-        std::cout << "V1: " << std::hex << V1 << std::endl;
-        std::cout << "V2: " << std::hex << V2 << std::endl;
-        std::cout << "V3: " << std::hex << V3 << std::endl;
-        std::cout << "V4: " << std::hex << V4 << std::endl;
-        std::cout << "V5: " << std::hex << V5 << std::endl;
-        std::cout << "V6: " << std::hex << V6 << std::endl;
-        std::cout << "V7: " << std::hex << V7 << std::endl;
-        std::cout << "V8: " << std::hex << V8 << std::endl;
-        std::cout << "V9: " << std::hex << V9 << std::endl;
-        std::cout << "VA: " << std::hex << VA << std::endl;
-        std::cout << "VB: " << std::hex << VB << std::endl;
-        std::cout << "VC: " << std::hex << VC << std::endl;
-        std::cout << "VD: " << std::hex << VD << std::endl;
-        std::cout << "VE: " << std::hex << VE << std::endl;
-        std::cout << "VF: " << std::hex << VF << std::endl;
+        std::cout << "V0: " << std::hex << static_cast<int>(V0) << std::endl; // Have to cast these to ints so they are visible on screen
+        std::cout << "V1: " << std::hex << static_cast<int>(V1) << std::endl;
+        std::cout << "V2: " << std::hex << static_cast<int>(V2) << std::endl;
+        std::cout << "V3: " << std::hex << static_cast<int>(V3) << std::endl;
+        std::cout << "V4: " << std::hex << static_cast<int>(V4) << std::endl;
+        std::cout << "V5: " << std::hex << static_cast<int>(V5) << std::endl;
+        std::cout << "V6: " << std::hex << static_cast<int>(V6) << std::endl;
+        std::cout << "V7: " << std::hex << static_cast<int>(V7) << std::endl;
+        std::cout << "V8: " << std::hex << static_cast<int>(V8) << std::endl;
+        std::cout << "V9: " << std::hex << static_cast<int>(V9) << std::endl;
+        std::cout << "VA: " << std::hex << static_cast<int>(VA) << std::endl;
+        std::cout << "VB: " << std::hex << static_cast<int>(VB) << std::endl;
+        std::cout << "VC: " << std::hex << static_cast<int>(VC) << std::endl;
+        std::cout << "VD: " << std::hex << static_cast<int>(VD) << std::endl;
+        std::cout << "VE: " << std::hex << static_cast<int>(VE) << std::endl;
+        std::cout << "VF: " << std::hex << static_cast<int>(VF) << std::endl;
     }
 };
 
@@ -120,7 +121,7 @@ public:
     int DisplayAddressSpace(unsigned int maxAddress);
     void DisplayRegisters();
     void SetGeneralRegisterValue(int registerNumber, uint8_t value);
-    uint16_t GetGeneralRegisterValue(int registerNumber);
+    uint8_t GetGeneralRegisterValue(int registerNumber);
     int Run();
     
     
@@ -194,7 +195,7 @@ int Emulator::Run() {
     while (running) {
         
         // For testing
-        if (test_idx > 100) {
+        if (test_idx > 10) {
             running = 0;
         }
          
@@ -251,16 +252,22 @@ int Emulator::Run() {
             case 0x6: {
                 // handle opcode 6; Set register to Value
                 int registerNumber = restOfInstr >> 8; // Obtain the register from the restOfInstr
+                
+                uint8_t value = static_cast<uint8_t>(restOfInstr & 0xff);
+        
                 // Set the register to value
-                SetGeneralRegisterValue(registerNumber, restOfInstr & 0xff);
+                
+                SetGeneralRegisterValue(registerNumber, value);
                 break;
             }
             case 0x7: {
                 // handle opcode 7; Add value to a register
+                
                 int registerNumber = restOfInstr >> 8; // Obtain the register from the restOfInstr
                 // Obtain the register value and add it to the operand -> set value for the register
                 uint8_t value = static_cast<uint8_t>(GetGeneralRegisterValue(registerNumber) + (restOfInstr & 0xff));
                 SetGeneralRegisterValue(registerNumber, value);
+                
                 break;
             }
             case 0xA: {
@@ -381,44 +388,78 @@ void Emulator::DisplayRegisters() {
 void Emulator::SetGeneralRegisterValue(int registerNumber, uint8_t value) {
     
     switch(registerNumber) {
-    case 0:
+        case 0: {
             registers.V0 = value;
-    case 1:
+            break;
+        }
+        case 1: {
             registers.V1 = value;
-    case 2:
+            break;
+        }
+        case 2: {
             registers.V2 = value;
-    case 3:
+            break;
+        }
+        case 3: {
             registers.V3 = value;
-    case 4:
+            break;
+        }
+        case 4: {
             registers.V4 = value;
-    case 5:
+            break;
+        }
+        case 5: {
             registers.V5 = value;
-    case 6:
+            break;
+        }
+        case 6: {
             registers.V6 = value;
-    case 7:
+            break;
+        }
+        case 7: {
             registers.V7 = value;
-    case 8:
+            break;
+        }
+        case 8: {
             registers.V8 = value;
-    case 9:
+            break;
+        }
+        case 9: {
             registers.V9 = value;
-    case 0xA:
+            break;
+        }
+        case 0xA: {
             registers.VA = value;
-    case 0xB:
+            break;
+        }
+        case 0xB: {
             registers.VB = value;
-    case 0xC:
+            break;
+        }
+        case 0xC: {
             registers.VC = value;
-    case 0xD:
+            break;
+        }
+        case 0xD: {
             registers.VD = value;
-    case 0xE:
+            break;
+        }
+        case 0xE: {
             registers.VE = value;
-    case 0xF:
+            break;
+        }
+        case 0xF: {
             registers.VF = value;
+            break;
+        }
+        default:
+            std::cout << "Unrecognized Register: Failed to update." << std::endl;
     }
     
     
 }
 
-uint16_t Emulator::GetGeneralRegisterValue(int registerNumber) {
+uint8_t Emulator::GetGeneralRegisterValue(int registerNumber) {
     
     switch(registerNumber) {
     case 0:
