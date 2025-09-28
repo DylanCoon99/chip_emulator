@@ -119,6 +119,8 @@ public:
     int LoadROM(std::string& filePath);
     int DisplayAddressSpace(unsigned int maxAddress);
     void DisplayRegisters();
+    void SetGeneralRegisterValue(int registerNumber, uint8_t value);
+    uint16_t GetGeneralRegisterValue(int registerNumber);
     int Run();
     
     
@@ -185,19 +187,18 @@ int Emulator::Run() {
     int running = 1;
     SDL_Event event;
     
-    //int test_idx = 0;
+    int test_idx = 0;
     
     // * Think about exit conditions for this loop
     INSTRUCTION currentInstr;
     while (running) {
-        /*
+        
         // For testing
         if (test_idx > 100) {
             running = 0;
         }
-         */
          
-        
+         
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_QUIT) {
                 running = 0;
@@ -214,7 +215,6 @@ int Emulator::Run() {
             }
         }
         
-        
         // Fetch next instruction
         std::cout << "Fetch Instruction" << std::endl;
         currentInstr = static_cast<INSTRUCTION>(addressSpace[registers.PC] << 8 | addressSpace[registers.PC + 1]);
@@ -228,84 +228,67 @@ int Emulator::Run() {
         OPCODE opCode = currentInstr >> 12;
         std::cout << "Current Instruction Opcode: " << std::hex << opCode << std::endl << std::endl;
         
-        // Get the last 12 bits of the currentInstr
+        // Get the last 12 bits of the currentInstr with bit mask
         uint16_t restOfInstr = currentInstr & 0xfff;
         
-        switch(opCode){
-            case 0x0:
-                // handle opcode 0
-                // For now assume it is the clear screen instruction
+        switch(opCode) {
+            // Starting off with these 6 basic instructions (clear screen, jump, set register, add value to register, set register I, draw to display)
+            case 0x0: {
+                // handle opcode 0; Clear Screen
                 for (int i = 0; i < DISPLAY_WIDTH; i ++) {
                     for (int j = 0; j < DISPLAY_HEIGHT; j ++) {
                         WriteBlock(i, j, 1);
                     }
                 }
+                break;
+            }
                 
-            case 0x1:
-                // handle opcode 1
+            case 0x1: {
+                // handle opcode 1; Jump to Address
                 registers.PC = restOfInstr;
-                std::cout << "JUMP ADDRESS: " << std::hex << restOfInstr << std::endl;
-            case 0x2:
-                // handle opcode 2
-                std::cout << "Instruction Not Implemented. Try Again Later." << std::endl;
-            case 0x3:
-                // handle opcode 3
-                std::cout << "Instruction Not Implemented. Try Again Later." << std::endl;
-            case 0x4:
-                // handle opcode 4
-                std::cout << "Instruction Not Implemented. Try Again Later." << std::endl;
-            case 0x5:
-                // handle opcode 5
-                std::cout << "Instruction Not Implemented. Try Again Later." << std::endl;
-            case 0x6:
-                // handle opcode 6
                 break;
-            case 0x7:
-                // handle opcode 7
+            }
+            case 0x6: {
+                // handle opcode 6; Set register to Value
+                int registerNumber = restOfInstr >> 8; // Obtain the register from the restOfInstr
+                // Set the register to value
+                SetGeneralRegisterValue(registerNumber, restOfInstr & 0xff);
                 break;
-            case 0x8:
-                // handle opcode 8
-                std::cout << "Instruction Not Implemented. Try Again Later." << std::endl;
-            case 0x9:
-                // handle opcode 9
-                std::cout << "Instruction Not Implemented. Try Again Later." << std::endl;
-            case 0xA:
-                // handle opcode A
+            }
+            case 0x7: {
+                // handle opcode 7; Add value to a register
+                int registerNumber = restOfInstr >> 8; // Obtain the register from the restOfInstr
+                // Obtain the register value and add it to the operand -> set value for the register
+                uint8_t value = static_cast<uint8_t>(GetGeneralRegisterValue(registerNumber) + (restOfInstr & 0xff));
+                SetGeneralRegisterValue(registerNumber, value);
                 break;
-            case 0xB:
-                // handle opcode B
-                std::cout << "Instruction Not Implemented. Try Again Later." << std::endl;
-            case 0xC:
-                // handle opcode C
-                std::cout << "Instruction Not Implemented. Try Again Later." << std::endl;
-            case 0xD:
-                // handle opcode D
+            }
+            case 0xA: {
+                // handle opcode A; Set register I to a value
+                registers.I = restOfInstr;
                 break;
-            case 0xE:
-                // handle opcode E
+            }
+            case 0xD: {
+                // handle opcode D; Display to the screen
+                break;
+            }
+            default: {
                 std::cout << "Instruction Not Implemented. Try Again Later." << std::endl;
-            case 0xF:
-                // handle opcode F
-                std::cout << "Instruction Not Implemented. Try Again Later." << std::endl;
-                
+            }
         }
         
         // Execute the instruction
         //std::cout << "Simulating Execute Instruction" << std::endl;
         
         
-        
         // Update the display
         //std::cout << "Displaying" << std::endl;
         SDL_RenderPresent(renderer);
-        
-        
-        
-        
+         
         // wait for 1/60 seconds
         std::this_thread::sleep_for(std::chrono::seconds(1 / FREQUENCY));
         
-        //test_idx += 1;
+        test_idx += 1;
     }
     
     SDL_DestroyRenderer(renderer);
@@ -362,7 +345,7 @@ int Emulator::LoadROM(std::string& filePath) {
     }
     
     // initialize the program counter (other necessary registers?)
-    registers.PC = 0x200;
+    registers.PC = BASE_ADDRESS;
     
     
     return 0;
@@ -392,6 +375,88 @@ void Emulator::DisplayRegisters() {
     
     registers.display();
 
+}
+
+
+void Emulator::SetGeneralRegisterValue(int registerNumber, uint8_t value) {
+    
+    switch(registerNumber) {
+    case 0:
+            registers.V0 = value;
+    case 1:
+            registers.V1 = value;
+    case 2:
+            registers.V2 = value;
+    case 3:
+            registers.V3 = value;
+    case 4:
+            registers.V4 = value;
+    case 5:
+            registers.V5 = value;
+    case 6:
+            registers.V6 = value;
+    case 7:
+            registers.V7 = value;
+    case 8:
+            registers.V8 = value;
+    case 9:
+            registers.V9 = value;
+    case 0xA:
+            registers.VA = value;
+    case 0xB:
+            registers.VB = value;
+    case 0xC:
+            registers.VC = value;
+    case 0xD:
+            registers.VD = value;
+    case 0xE:
+            registers.VE = value;
+    case 0xF:
+            registers.VF = value;
+    }
+    
+    
+}
+
+uint16_t Emulator::GetGeneralRegisterValue(int registerNumber) {
+    
+    switch(registerNumber) {
+    case 0:
+            return registers.V0;
+    case 1:
+            return registers.V1;
+    case 2:
+            return registers.V2;
+    case 3:
+            return registers.V3;
+    case 4:
+            return registers.V4;
+    case 5:
+            return registers.V5;
+    case 6:
+            return registers.V6;
+    case 7:
+            return registers.V7;
+    case 8:
+            return registers.V8;
+    case 9:
+            return registers.V9;
+    case 0xA:
+            return registers.VA;
+    case 0xB:
+            return registers.VB;
+    case 0xC:
+            return registers.VC;
+    case 0xD:
+            return registers.VD;
+    case 0xE:
+            return registers.VE;
+    case 0xF:
+            return registers.VF;
+    }
+    return 0;
+    
+    
 }
 
 

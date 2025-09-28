@@ -147,7 +147,7 @@ int main(int argc, char* argv[]) {
     
     myEmulator.Run();
     
-    //myEmulator.DisplayRegisters();
+    myEmulator.DisplayRegisters();
     
     
     
