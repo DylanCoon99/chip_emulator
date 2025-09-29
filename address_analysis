@@ -40,7 +40,7 @@ Address: 226 d0
 Address: 227 1f
 Address: 228 12
 Address: 229 28
-Address: 22a ff  (I register)
+Address: 22a ff  (I register starting point)
 Address: 22b 0
 Address: 22c ff
 Address: 22d 0
@@ -55,7 +55,7 @@ Address: 235 0
 Address: 236 ff
 Address: 237 0
 Address: 238 ff
-Address: 239 ff
+Address: 239 ff (I register; next point)
 Address: 23a 0
 Address: 23b ff
 Address: 23c 0

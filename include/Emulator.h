@@ -131,7 +131,7 @@ public:
     SDL_Renderer* renderer = NULL;
     
     // Display Methods
-    void WriteBlock(int x, int y, int val);
+    void WriteBlocks();
     
     // Instruction Methods
     //int ClearScreen();
@@ -188,16 +188,18 @@ int Emulator::Run() {
     int running = 1;
     SDL_Event event;
     
-    int test_idx = 0;
+    //int test_idx = 0;
     
     // * Think about exit conditions for this loop
     INSTRUCTION currentInstr;
     while (running) {
-        
+        /*
         // For testing
-        if (test_idx > 10) {
+        if (test_idx > 20) {
             running = 0;
         }
+         */
+         
          
          
         while (SDL_PollEvent(&event)) {
@@ -238,9 +240,10 @@ int Emulator::Run() {
                 // handle opcode 0; Clear Screen
                 for (int i = 0; i < DISPLAY_WIDTH; i ++) {
                     for (int j = 0; j < DISPLAY_HEIGHT; j ++) {
-                        WriteBlock(i, j, 1);
+                        displayGrid[i][j] = 1;
                     }
                 }
+                WriteBlocks();
                 break;
             }
                 
@@ -277,25 +280,74 @@ int Emulator::Run() {
             }
             case 0xD: {
                 // handle opcode D; Display to the screen
+                // DXYN, N pixels tall, starting at coordinate XY, draw the sprite at address stored in I register
+                // op   VX   VY   N
+                // 0000 0001 0002 000f
+                // Obtain the x coordinate: Value in the VX register % DISPLAY_WIDTH
+                int xReg = (restOfInstr >> 8);
+                uint8_t xValue = GetGeneralRegisterValue(xReg) % DISPLAY_WIDTH;
+                std::cout << "X Value: " << static_cast<int>(xValue) << std::endl;
+                // Obtain the y coordinate: Value in the VY register % DISPLAY_HEIGHT
+                int yReg = (restOfInstr >> 4) & 0xf;
+                uint8_t yValue = GetGeneralRegisterValue(yReg) % DISPLAY_HEIGHT;
+                std::cout << "Y Value: " << static_cast<int>(yValue) << std::endl;
+                // Obtain N
+                int N = (restOfInstr & 0xf);
+                std::cout << "N: " << N << std::endl;
+                // Set VF to 0
+                SetGeneralRegisterValue(0xf, 0);
+                
+                int nextByte;
+                
+                for (int n = 0; n < N; n ++) {
+                    // Get nth byte of sprite data (I + n): Get address in I register -> get data at that address + n
+                    nextByte = addressSpace[(registers.I + n)];
+                    
+                    std::cout << "Sprite " << n << ": " << nextByte << std::endl;
+                    
+                    int idx = 0;
+                    bool curBit;
+                    while (idx < 8) {
+                        
+                        // SOMETHING TO NOTE: CURRENTLY I AM GRABBING THE BITS FROM LSB POSITION; THIS IS PROBABLY WRONG
+                        
+                        // get the next bit
+                        curBit = nextByte & 0x1;
+                        std::cout << "Current Bit " << idx << " on Sprite " << n << ": " << curBit;
+                        // if current display bit at x, y is 1 and sprite value at x, y is 1 -> turn off at x, y
+                        if (curBit) {
+                            std::cout << "X, Y: " << xValue << yValue << std::endl;
+                            displayGrid[xValue][yValue] = ~displayGrid[xValue][yValue];
+                        }
+                        xValue = ((xValue += 1) % DISPLAY_WIDTH);
+                        
+                        nextByte = nextByte >> 1;
+                        idx += 1;
+                    }
+                    yValue = ((yValue += 1) % DISPLAY_HEIGHT);
+                
+                }
+                
+                
                 break;
             }
             default: {
                 std::cout << "Instruction Not Implemented. Try Again Later." << std::endl;
             }
         }
-        
-        // Execute the instruction
-        //std::cout << "Simulating Execute Instruction" << std::endl;
-        
-        
+        WriteBlocks();
         // Update the display
         //std::cout << "Displaying" << std::endl;
         SDL_RenderPresent(renderer);
          
         // wait for 1/60 seconds
         std::this_thread::sleep_for(std::chrono::seconds(1 / FREQUENCY));
+        std::cout << "Enter for next loop iteration" << std::endl;
+        std::cin >> running;
         
-        test_idx += 1;
+        DisplayRegisters();
+        
+        //test_idx += 1;
     }
     
     SDL_DestroyRenderer(renderer);
