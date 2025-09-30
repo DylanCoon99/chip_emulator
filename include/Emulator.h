@@ -249,18 +249,7 @@ int Emulator::Run() {
                         int sum = 0;
                         int carry = 0;
                             
-                        // iterate over 8 bits
-                        for (int i = 0; i < 8; i ++) {
-                            int xBit = (xValue >> i) & 0x1;
-                            int yBit = (yValue >> i) & 0x1;
-                            
-                            // add the bits
-                            int s = xBit ^ yBit ^ carry;
-                            carry = (xBit & yBit) | (xBit & carry) | (yBit & carry);
-                            
-                            sum |= (s << i);
-                             
-                        }
+                        AddBinaryNumbers(xValue, yValue, &sum, &carry);
                         
                         SetGeneralRegisterValue(xReg, static_cast<uint8_t>(sum));
                         registers.VF = static_cast<uint8_t>(carry);
@@ -269,6 +258,17 @@ int Emulator::Run() {
                     }
                     case 5: {
                         // 8XY5: Subtract   -> VX is set to VX - VY; VY is unaffected
+                        
+                        yValue = (~yValue + 1);
+                        
+                        int sum = 0;
+                        int carry = 0;
+                        
+                        AddBinaryNumbers(xValue, yValue, &sum, &carry);
+                        
+                        SetGeneralRegisterValue(xReg, static_cast<uint8_t>(sum));
+                        registers.VF = static_cast<uint8_t>(carry);
+                        
                         break;
                     }
                     case 6: {
@@ -283,6 +283,16 @@ int Emulator::Run() {
                     }
                     case 7: {
                         // 8XY7: Subtract   -> VX is set to VY - VX; VY is unaffected
+                        xValue = (~xValue + 1);
+                        
+                        int sum = 0;
+                        int carry = 0;
+                        
+                        AddBinaryNumbers(xValue, yValue, &sum, &carry);
+                        
+                        SetGeneralRegisterValue(xReg, static_cast<uint8_t>(sum));
+                        registers.VF = static_cast<uint8_t>(carry);
+                        
                         break;
                     }
                     case 8: {

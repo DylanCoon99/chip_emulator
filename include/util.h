@@ -60,6 +60,24 @@ struct Registers {
 };
 
 
+void AddBinaryNumbers(uint8_t xValue, uint8_t yValue, int* sum, int* carry) {
+    
+    // iterate over 8 bits
+    for (int i = 0; i < 8; i ++) {
+        int xBit = (xValue >> i) & 0x1;
+        int yBit = (yValue >> i) & 0x1;
+        
+        // add the bits
+        int s = xBit ^ yBit ^ *carry;
+        *carry = (xBit & yBit) | (xBit & *carry) | (yBit & *carry);
+        
+        *sum |= (s << i);
+         
+    }
+    
+}
+
+
 
 
 
