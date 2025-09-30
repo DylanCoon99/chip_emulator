@@ -13,10 +13,13 @@
 #include <iostream>
 #include <filesystem>
 #include <bitset>
+#include <random>
 //#include "Display.h"
+#include "Registers.h"
 #include </opt/homebrew/include/SDL2/SDL.h>
 #include "Instructions.h"
 #include "util.h"
+
 
 
 // Utils: struct/class definitions, utility functions
@@ -34,53 +37,6 @@ const uint8_t SPACING        = 20;
 
 const uint16_t ABSOLUTE_HEIGHT = DISPLAY_HEIGHT * SPACING;
 const uint16_t ABSOLUTE_WIDTH  = DISPLAY_WIDTH  * SPACING;
-
-
-
-// Registers
-struct Registers {
-    uint16_t PC; // Program Counter (PC): 12 bits, points to current instruction that in memory
-    uint16_t I;  // One 16 bit index register called "I": used to point to locations in memory
-    uint8_t V0;  // 16 8-bit (1 byte) general purpose registers numbered 0x0 - 0xF (V0 - VF)
-    uint8_t V1;
-    uint8_t V2;
-    uint8_t V3;
-    uint8_t V4;
-    uint8_t V5;
-    uint8_t V6;
-    uint8_t V7;
-    uint8_t V8;
-    uint8_t V9;
-    uint8_t VA;
-    uint8_t VB;
-    uint8_t VC;
-    uint8_t VD;
-    uint8_t VE;
-    uint8_t VF;
-
-    
-    void display() {
-        std::cout << "PC: " << std::hex << PC << std::endl;
-        std::cout << "I:  " << std::hex << I << std::endl;
-        std::cout << "V0: " << std::hex << static_cast<int>(V0) << std::endl; // Have to cast these to ints so they are visible on screen
-        std::cout << "V1: " << std::hex << static_cast<int>(V1) << std::endl;
-        std::cout << "V2: " << std::hex << static_cast<int>(V2) << std::endl;
-        std::cout << "V3: " << std::hex << static_cast<int>(V3) << std::endl;
-        std::cout << "V4: " << std::hex << static_cast<int>(V4) << std::endl;
-        std::cout << "V5: " << std::hex << static_cast<int>(V5) << std::endl;
-        std::cout << "V6: " << std::hex << static_cast<int>(V6) << std::endl;
-        std::cout << "V7: " << std::hex << static_cast<int>(V7) << std::endl;
-        std::cout << "V8: " << std::hex << static_cast<int>(V8) << std::endl;
-        std::cout << "V9: " << std::hex << static_cast<int>(V9) << std::endl;
-        std::cout << "VA: " << std::hex << static_cast<int>(VA) << std::endl;
-        std::cout << "VB: " << std::hex << static_cast<int>(VB) << std::endl;
-        std::cout << "VC: " << std::hex << static_cast<int>(VC) << std::endl;
-        std::cout << "VD: " << std::hex << static_cast<int>(VD) << std::endl;
-        std::cout << "VE: " << std::hex << static_cast<int>(VE) << std::endl;
-        std::cout << "VF: " << std::hex << static_cast<int>(VF) << std::endl;
-    }
-};
-
 
 
 /* Address Space Layout (4096 bytes)
@@ -108,6 +64,7 @@ struct Registers {
 
 // Class to define the emulator
 class Emulator {
+    
 private:
     // Private Attributes
     int* addressSpace;
@@ -133,9 +90,6 @@ public:
     
     // Display Methods
     void WriteBlocks();
-    
-    // Instruction Methods
-    //int ClearScreen();
     
     
     Emulator(bool debug, unsigned int size = MEMORY_SIZE) {
@@ -179,31 +133,14 @@ int Emulator::Run() {
     SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
     std::cout << "Successfully Created Renderer!" << std::endl;
     
-    
-    
-    
-    //std::cout << "Running the Emulator" << std::endl;
-    
-    // Starting at where the PC counter is pointing to, begin to fetch -> decode -> execute instructions
-    
+
     // * LOOP NEEDS TO RUN AT 60Hz (60 cycles a second / 60 iterations a second)
     
     int running = 1;
     SDL_Event event;
     
-    //int test_idx = 0;
-    
-    // * Think about exit conditions for this loop
     INSTRUCTION currentInstr;
     while (running) {
-        /*
-        // For testing
-        if (test_idx > 20) {
-            running = 0;
-        }
-         */
-         
-         
          
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_QUIT) {
@@ -282,6 +219,21 @@ int Emulator::Run() {
                 registers.I = restOfInstr;
                 break;
             }
+            case 0xC: {
+                // CXNN: Generates a random number, ANDs it with NN and then puts the value in VX
+                int xReg = (restOfInstr >> 8);
+                
+                int NN = restOfInstr & 0xff;
+                
+                std::random_device rd;
+                std::mt19937 gen(rd());
+                std::uniform_int_distribution<> distrib(0, 15); // 8 bit number
+
+                int randomValue = distrib(gen);
+                
+                SetGeneralRegisterValue(xReg, static_cast<uint8_t>(randomValue & NN));
+                
+            }
             case 0xD: {
                 // handle opcode D; Display to the screen
                 // DXYN, N pixels tall, starting at coordinate XY, draw the sprite at address stored in I register
@@ -322,30 +274,23 @@ int Emulator::Run() {
                         }
                         
                         // get the next bit
-                        //curBit = nextByte & 0x1;
                         curBit = mask & nextByte;
                         
                         if (curBit && displayGrid[xValue][yValue]) {
-                            //std::cout << "X, Y: " << xValue << yValue << std::endl;
                             displayGrid[xValue][yValue] = 0;
                             SetGeneralRegisterValue(0xf, 1);
                         } else if (curBit && ~displayGrid[xValue][yValue]) {
                             displayGrid[xValue][yValue] = 1;
                         }
                         
-                        
                         xValue = ((xValue += 1));
-                        
-                        //nextByte = nextByte >> 1;
+
                         mask = (mask >> 1);
                         idx += 1;
                     }
                     yValue = ((yValue += 1));
-                    
-                    
-                
+
                 }
-                
                 
                 break;
             }
@@ -353,21 +298,19 @@ int Emulator::Run() {
                 std::cout << "Instruction Not Implemented. Try Again Later." << std::endl;
             }
         }
-        WriteBlocks();
+        
         // Update the display
-        //std::cout << "Displaying" << std::endl;
+        WriteBlocks();
         SDL_RenderPresent(renderer);
          
         // wait for 1/60 seconds
         std::this_thread::sleep_for(std::chrono::seconds(1 / FREQUENCY));
         if (debugFlag) {
+            DisplayRegisters();
             std::cout << "Enter for next loop iteration" << std::endl;
             std::cin >> running;
         }
-        
-        DisplayRegisters();
-        
-        //test_idx += 1;
+
     }
     
     SDL_DestroyRenderer(renderer);
@@ -412,49 +355,19 @@ int Emulator::LoadROM(std::string& filePath) {
 
     inputFile.close();
     
-    // Copy the program contents to addressSpace at 0x200
-    //std::cout << buffer[0] << buffer[1] << buffer[2] << buffer[3] << std::endl;
-    
-    
     
     for (size_t i = 0; i < buffer.size(); i ++) {
-        //std::cout << buffer[i] << buffer[i + 1] << std::endl;
         // starting at address 0x200 -> start to copy each byte to memory
         addressSpace[BASE_ADDRESS + i] = buffer[i];;
     }
     
-    // initialize the program counter (other necessary registers?)
+    // initialize the program counter
     registers.PC = BASE_ADDRESS;
     
     
     return 0;
 }
 
-
-
-int Emulator::DisplayAddressSpace(unsigned int maxAddress) {
-    // returns 0 on success, 1 on failure
-
-    // Displays the address space for the emulator
-    for (unsigned int i = 0; i < maxAddress; i ++) {
-        // Displays all of the bytes
-        std::cout << "Address: " << std::hex << i << " " << addressSpace[i] << std::endl;
-        
-    }
-
-
-    return 0;
-}
-
-
-
-void Emulator::DisplayRegisters() {
-
-    // Displays all of the registers and their values
-    
-    registers.display();
-
-}
 
 
 void Emulator::SetGeneralRegisterValue(int registerNumber, uint8_t value) {
@@ -571,6 +484,7 @@ uint8_t Emulator::GetGeneralRegisterValue(int registerNumber) {
     
     
 }
+
 
 
 
