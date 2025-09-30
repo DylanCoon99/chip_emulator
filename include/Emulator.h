@@ -214,6 +214,92 @@ int Emulator::Run() {
                 
                 break;
             }
+            case 0x8: {
+                // handle opcode 8; arithmetic instructions
+                int xReg = (restOfInstr >> 8);
+                uint8_t xValue = GetGeneralRegisterValue(xReg) % DISPLAY_WIDTH;
+
+                int yReg = (restOfInstr >> 4) & 0xf;
+                uint8_t yValue = GetGeneralRegisterValue(yReg) % DISPLAY_HEIGHT;
+
+                int N = (restOfInstr & 0xf);
+                
+                // 8XY0: VX is set to the value of VY
+                switch(N) {
+                    case 1: {
+                        // 8XY1: Logical OR -> VX is set to the bitwise OR of VX, VY; VY is unaffected
+                        uint8_t result = xValue | yValue;
+                        SetGeneralRegisterValue(xReg, result);
+                        break;
+                    }
+                    case 2: {
+                        // 8XY2: Logical    -> AND VX is set to the bitwise AND of VX, VY; VY is unaffected
+                        uint8_t result = xValue & yValue;
+                        SetGeneralRegisterValue(xReg, result);
+                        break;
+                    }
+                    case 3: {
+                        // 8XY3: Logical    -> XOR VX is set to the bitwise XOR of VX, VY; VY is unaffected
+                        uint8_t result = xValue ^ yValue;
+                        SetGeneralRegisterValue(xReg, result);
+                        break;
+                    }
+                    case 4: {
+                        // 8XY4: Add        -> VX is set to the sum of VX and VY; VY is unaffected, if the overflow is 1 set VF to 1 otherwise set to 0
+                        int sum = 0;
+                        int carry = 0;
+                            
+                        // iterate over 8 bits
+                        for (int i = 0; i < 8; i ++) {
+                            int xBit = (xValue >> i) & 0x1;
+                            int yBit = (yValue >> i) & 0x1;
+                            
+                            // add the bits
+                            int s = xBit ^ yBit ^ carry;
+                            carry = (xBit & yBit) | (xBit & carry) | (yBit & carry);
+                            
+                            sum |= (s << i);
+                             
+                        }
+                        
+                        SetGeneralRegisterValue(xReg, static_cast<uint8_t>(sum));
+                        registers.VF = static_cast<uint8_t>(carry);
+                        
+                        break;
+                    }
+                    case 5: {
+                        // 8XY5: Subtract   -> VX is set to VX - VY; VY is unaffected
+                        break;
+                    }
+                    case 6: {
+                        // 8XY6: Bit Shift  -> Set VX to value of VY, shift value of VX one bit to right; set VF to the bit that was truncated out
+                        uint8_t carry = xValue & 0x1;
+                        uint8_t result = xValue >> 1;
+                        
+                        SetGeneralRegisterValue(xReg, result);
+                        registers.VF = carry;
+                        
+                        break;
+                    }
+                    case 7: {
+                        // 8XY7: Subtract   -> VX is set to VY - VX; VY is unaffected
+                        break;
+                    }
+                    case 8: {
+                        // 8XY8: Bit Shift  -> Set VX to value of VY, shift value of VX one bit to left; set VF to the bit that was truncated out
+                        uint8_t carry = xValue & 0x80; //10000000
+                        uint8_t result = static_cast<uint8_t>(xValue << 1);
+                        
+                        SetGeneralRegisterValue(xReg, result);
+                        registers.VF = carry;
+                        break;
+                    }
+                        
+                }
+  
+                
+                break;
+            }
             case 0xA: {
                 // handle opcode A; Set register I to a value
                 registers.I = restOfInstr;
