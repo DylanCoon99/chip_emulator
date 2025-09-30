@@ -118,17 +118,26 @@ int main(int argc, char* argv[]) {
 	/*
 		Initialize memory, load the ROM file into memory, initialize control flow registers (PC)
 	*/
+    if (argc < 2) {
+        std::cerr << "Error: not enough arguments." << std::endl;
+        return 1;
+    }
     
-    Emulator myEmulator;
+    bool debugFlag = false;
+    
+    if (argc == 3) {
+        debugFlag = true;
+    }
+    
+    Emulator myEmulator(debugFlag);
 
     
     std::cout << myEmulator.addressSpaceSize << std::endl;
 
     
-    if (argc < 2) {
-        std::cerr << "Error: not enough arguments." << std::endl;
-        return 1;
-    }
+    
+    
+    
     
     std::string programName = argv[1];
     

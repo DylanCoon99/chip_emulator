@@ -123,6 +123,7 @@ public:
     void SetGeneralRegisterValue(int registerNumber, uint8_t value);
     uint8_t GetGeneralRegisterValue(int registerNumber);
     int Run();
+    bool debugFlag;
     
     
     //Display attributes;
@@ -137,10 +138,12 @@ public:
     //int ClearScreen();
     
     
-    Emulator(unsigned int size = MEMORY_SIZE) {
+    Emulator(bool debug, unsigned int size = MEMORY_SIZE) {
         std::cout << "Hi, from the emulator" << std::endl;
         
         addressSpaceSize = size;
+        
+        debugFlag = debug;
         
         // Initialize the address space
         addressSpace = new int[addressSpaceSize];
@@ -240,7 +243,8 @@ int Emulator::Run() {
                 // handle opcode 0; Clear Screen
                 for (int i = 0; i < DISPLAY_WIDTH; i ++) {
                     for (int j = 0; j < DISPLAY_HEIGHT; j ++) {
-                        displayGrid[i][j] = 1;
+                        displayGrid[i][j] = 0;
+                        //displayGrid[DISPLAY_WIDTH - 1][DISPLAY_HEIGHT - 1] = 1;
                     }
                 }
                 WriteBlocks();
@@ -303,28 +307,42 @@ int Emulator::Run() {
                     // Get nth byte of sprite data (I + n): Get address in I register -> get data at that address + n
                     nextByte = addressSpace[(registers.I + n)];
                     
-                    std::cout << "Sprite " << n << ": " << nextByte << std::endl;
+                    std::bitset<8> x(static_cast<unsigned long long>(nextByte));
+                    std::cout << "Byte: " << x << std::endl;
+
+                    xValue = GetGeneralRegisterValue(xReg) % DISPLAY_WIDTH;
                     
                     int idx = 0;
                     bool curBit;
+                    int mask = 0x80;
                     while (idx < 8) {
-                        
-                        // SOMETHING TO NOTE: CURRENTLY I AM GRABBING THE BITS FROM LSB POSITION; THIS IS PROBABLY WRONG
+                        // if we reach the end of the screen; break this loop
+                        if (xValue > DISPLAY_WIDTH) {
+                            break;
+                        }
                         
                         // get the next bit
-                        curBit = nextByte & 0x1;
-                        std::cout << "Current Bit " << idx << " on Sprite " << n << ": " << curBit;
-                        // if current display bit at x, y is 1 and sprite value at x, y is 1 -> turn off at x, y
-                        if (curBit) {
-                            std::cout << "X, Y: " << xValue << yValue << std::endl;
-                            displayGrid[xValue][yValue] = ~displayGrid[xValue][yValue];
-                        }
-                        xValue = ((xValue += 1) % DISPLAY_WIDTH);
+                        //curBit = nextByte & 0x1;
+                        curBit = mask & nextByte;
                         
-                        nextByte = nextByte >> 1;
+                        if (curBit && displayGrid[xValue][yValue]) {
+                            //std::cout << "X, Y: " << xValue << yValue << std::endl;
+                            displayGrid[xValue][yValue] = 0;
+                            SetGeneralRegisterValue(0xf, 1);
+                        } else if (curBit && ~displayGrid[xValue][yValue]) {
+                            displayGrid[xValue][yValue] = 1;
+                        }
+                        
+                        
+                        xValue = ((xValue += 1));
+                        
+                        //nextByte = nextByte >> 1;
+                        mask = (mask >> 1);
                         idx += 1;
                     }
-                    yValue = ((yValue += 1) % DISPLAY_HEIGHT);
+                    yValue = ((yValue += 1));
+                    
+                    
                 
                 }
                 
@@ -342,8 +360,10 @@ int Emulator::Run() {
          
         // wait for 1/60 seconds
         std::this_thread::sleep_for(std::chrono::seconds(1 / FREQUENCY));
-        std::cout << "Enter for next loop iteration" << std::endl;
-        std::cin >> running;
+        if (debugFlag) {
+            std::cout << "Enter for next loop iteration" << std::endl;
+            std::cin >> running;
+        }
         
         DisplayRegisters();
         
