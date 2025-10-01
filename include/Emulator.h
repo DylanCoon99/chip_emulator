@@ -14,6 +14,7 @@
 #include <filesystem>
 #include <bitset>
 #include <random>
+#include <stack>
 //#include "Display.h"
 #include "Registers.h"
 #include </opt/homebrew/include/SDL2/SDL.h>
@@ -28,6 +29,8 @@
 const unsigned int MEMORY_SIZE = 4096; // 4KB Memory Size
 const unsigned int FREQUENCY   = 700;   // 700 Hz
 const uint16_t BASE_ADDRESS = 0x200; // where the program should start in memory
+const uint16_t FONT_ADDRESS = 0x050;
+const int      FONT_SIZE    = 5;     // Size of a single character sprite in memory
 
 
 // Display shit
@@ -72,7 +75,10 @@ private:
 public:
     // Public Attributes
     unsigned int addressSpaceSize;
+    std::stack<StackFrame> stack;
     Registers registers;
+    bool debugFlag;
+    
     // Methods
     int LoadROM(std::string& filePath);
     int DisplayAddressSpace(unsigned int maxAddress);
@@ -80,7 +86,7 @@ public:
     void SetGeneralRegisterValue(int registerNumber, uint8_t value);
     uint8_t GetGeneralRegisterValue(int registerNumber);
     int Run();
-    bool debugFlag;
+    
     
     
     //Display attributes;
@@ -101,6 +107,39 @@ public:
         
         // Initialize the address space
         addressSpace = new int[addressSpaceSize];
+        
+        // Copy the font into memory
+        std::ifstream inputFile("./font/font.txt"); // Replace with your file name
+        if (!inputFile.is_open()) {
+            std::cerr << "Error opening font file!" << std::endl;
+        }
+
+        std::vector<int> buffer;
+        char char1, char2;
+
+        while (inputFile >> char1 >> char2) {
+            int val1 = hexCharToInt(char1);
+            int val2 = hexCharToInt(char2);
+
+            if (val1 != -1 && val2 != -1) {
+                int byte = (val1 << 4) | val2;
+                buffer.push_back(byte);
+                //std::cout << "Hex Char: " << std::hex << byte << std::endl;
+            } else {
+                std::cerr << "Invalid hex character encountered: " << char1 << char2 << std::endl;
+                // Handle error or skip invalid characters
+                continue;
+            }
+        }
+
+        inputFile.close();
+        
+        
+        for (size_t i = 0; i < buffer.size(); i ++) {
+            // starting at address 0x200 -> start to copy each byte to memory
+            addressSpace[FONT_ADDRESS + i] = buffer[i];;
+        }
+        
         
     }
     
@@ -390,6 +429,33 @@ int Emulator::Run() {
                 
                 break;
             }
+            case 0xF: {
+                // FX29: store the font address of the hexadecimal value in VX
+                
+                int xReg = (restOfInstr >> 8);
+                uint8_t xValue = GetGeneralRegisterValue(xReg);
+                
+                uint8_t fCode = currentInstr & 0xff;
+                
+                switch(fCode) {
+                    case 0x1e: {
+                        registers.I = registers.I + xValue;
+                        break;
+                    }
+                    case 0x29: {
+                        
+                        
+                        // Calculate the addres that the font for char VX is
+                        uint16_t address = FONT_ADDRESS + (xValue * FONT_SIZE);
+                        
+                        registers.I = address;
+                        break;
+                    }
+                }
+                
+                break;
+                
+            }
             default: {
                 std::cout << "Instruction Not Implemented. Try Again Later." << std::endl;
             }
@@ -415,7 +481,6 @@ int Emulator::Run() {
     
     return 0;
 }
-
 
 
 
