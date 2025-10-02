@@ -79,12 +79,4 @@ void AddBinaryNumbers(uint8_t xValue, uint8_t yValue, int* sum, int* carry) {
 
 
 
-// Stack stuff
-class StackFrame {
-
-};
-
-
-
-
 #endif // !UTIL_H

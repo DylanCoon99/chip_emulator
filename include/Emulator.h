@@ -26,11 +26,12 @@
 // Utils: struct/class definitions, utility functions
 
 // Constants
-const unsigned int MEMORY_SIZE = 4096; // 4KB Memory Size
-const unsigned int FREQUENCY   = 700;   // 700 Hz
-const uint16_t BASE_ADDRESS = 0x200; // where the program should start in memory
-const uint16_t FONT_ADDRESS = 0x050;
-const int      FONT_SIZE    = 5;     // Size of a single character sprite in memory
+const unsigned int MEMORY_SIZE = 4096;  // 4KB Memory Size
+const unsigned int CLOCK_SPEED = 700;   // 700 Hz
+const uint16_t BASE_ADDRESS    = 0x200; // where the program should start in memory
+const uint16_t FONT_ADDRESS    = 0x050;
+const int      FONT_SIZE       = 5;     // Size of a single character sprite in memory
+//const int      STACK_SIZE      = 10;    // How many stack frames
 
 
 // Display shit
@@ -75,7 +76,7 @@ private:
 public:
     // Public Attributes
     unsigned int addressSpaceSize;
-    std::stack<StackFrame> stack;
+    std::stack<unsigned int> stack;   // used for pushing the current program counter to
     Registers registers;
     bool debugFlag;
     
@@ -232,6 +233,14 @@ int Emulator::Run() {
                 registers.PC = restOfInstr;
                 break;
             }
+            case 0x2: {
+                // handle opcode 2; Jump to Address
+                registers.PC = restOfInstr;
+                
+                // push the PC to the stack
+                stack.push(static_cast<unsigned int>(registers.PC));
+                break;
+            }
             case 0x6: {
                 // handle opcode 6; Set register to Value
                 int registerNumber = restOfInstr >> 8; // Obtain the register from the restOfInstr
@@ -256,10 +265,10 @@ int Emulator::Run() {
             case 0x8: {
                 // handle opcode 8; arithmetic instructions
                 int xReg = (restOfInstr >> 8);
-                uint8_t xValue = GetGeneralRegisterValue(xReg) % DISPLAY_WIDTH;
+                uint8_t xValue = GetGeneralRegisterValue(xReg);
 
                 int yReg = (restOfInstr >> 4) & 0xf;
-                uint8_t yValue = GetGeneralRegisterValue(yReg) % DISPLAY_HEIGHT;
+                uint8_t yValue = GetGeneralRegisterValue(yReg);
 
                 int N = (restOfInstr & 0xf);
                 
@@ -312,8 +321,8 @@ int Emulator::Run() {
                     }
                     case 6: {
                         // 8XY6: Bit Shift  -> Set VX to value of VY, shift value of VX one bit to right; set VF to the bit that was truncated out
-                        uint8_t carry = xValue & 0x1;
-                        uint8_t result = xValue >> 1;
+                        uint8_t carry = yValue & 0x1;
+                        uint8_t result = yValue >> 1;
                         
                         SetGeneralRegisterValue(xReg, result);
                         registers.VF = carry;
@@ -336,7 +345,7 @@ int Emulator::Run() {
                     }
                     case 8: {
                         // 8XY8: Bit Shift  -> Set VX to value of VY, shift value of VX one bit to left; set VF to the bit that was truncated out
-                        uint8_t carry = xValue & 0x80; //10000000
+                        uint8_t carry = (xValue & 0x80) >> 7; //10000000
                         uint8_t result = static_cast<uint8_t>(xValue << 1);
                         
                         SetGeneralRegisterValue(xReg, result);
@@ -430,7 +439,7 @@ int Emulator::Run() {
                 break;
             }
             case 0xF: {
-                // FX29: store the font address of the hexadecimal value in VX
+                
                 
                 int xReg = (restOfInstr >> 8);
                 uint8_t xValue = GetGeneralRegisterValue(xReg);
@@ -443,9 +452,9 @@ int Emulator::Run() {
                         break;
                     }
                     case 0x29: {
+                        // FX29: store the font address of the hexadecimal value in VX
                         
-                        
-                        // Calculate the addres that the font for char VX is
+                        // Calculate the address that the font for char VX is
                         uint16_t address = FONT_ADDRESS + (xValue * FONT_SIZE);
                         
                         registers.I = address;
@@ -466,7 +475,7 @@ int Emulator::Run() {
         SDL_RenderPresent(renderer);
          
         // wait for 1/60 seconds
-        std::this_thread::sleep_for(std::chrono::seconds(1 / FREQUENCY));
+        std::this_thread::sleep_for(std::chrono::seconds(1 / CLOCK_SPEED));
         if (debugFlag) {
             DisplayRegisters();
             std::cout << "Enter for next loop iteration" << std::endl;

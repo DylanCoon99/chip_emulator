@@ -1,0 +1,56 @@
+## load values into registers and perform arithmetic operations on them
+
+
+60f3 (Set Register 0 to value 11110011) DONE
+
+61cc (Set Register 1 to value 11001100) DONE
+
+8012 (Bitwise AND V0 and V1) V0: 11000000 (0xc0)
+
+
+8011 (Bitwise OR V0 and V1) V0: 11001100 (0xcc)
+
+
+8013 (Bitwise XOR V0 and V1) V0: 00000000 (0x00)
+
+
+60f3 (Set Register 0 to value 11110011)
+
+8014 (Add V0 and V1) V1: 10111111 (0xbf)   VF: 1
+
+6f00 (Set VF to 0x0)
+
+801
+
+
+V3: 0x10 (16)
+
+v5: 0x08 (8)
+
+8537 (V3 - V5; store result in V5)
+
+
+0x10 - 0x08 = 0xf8
+
+Subtract routine:
+
+    xValue = (~xValue + 1);   xValue = 00001000; ~xValue + 1 = 11110111 + 1 = 11111000
+    
+    int sum = 0;
+    int carry = 0;
+    
+    AddBinaryNumbers(xValue, yValue, &sum, &carry);
+    
+    SetGeneralRegisterValue(xReg, static_cast<uint8_t>(sum));
+    registers.VF = static_cast<uint8_t>(carry);
+
+
+0x08 - 0x10 =
+
+
+111
+11111000
+00010000
+00001000 = 0x08
+
+VF = 1
