@@ -217,14 +217,26 @@ int Emulator::Run() {
         switch(opCode) {
             // Starting off with these 6 basic instructions (clear screen, jump, set register, add value to register, set register I, draw to display)
             case 0x0: {
-                // handle opcode 0; Clear Screen
-                for (int i = 0; i < DISPLAY_WIDTH; i ++) {
-                    for (int j = 0; j < DISPLAY_HEIGHT; j ++) {
-                        displayGrid[i][j] = 0;
-                        //displayGrid[DISPLAY_WIDTH - 1][DISPLAY_HEIGHT - 1] = 1;
+                
+                
+                switch(restOfInstr) {
+                    case 0x0E0: {
+                        // handle opcode 0; Clear Screen
+                        for (int i = 0; i < DISPLAY_WIDTH; i ++) {
+                            for (int j = 0; j < DISPLAY_HEIGHT; j ++) {
+                                displayGrid[i][j] = 0;
+                                //displayGrid[DISPLAY_WIDTH - 1][DISPLAY_HEIGHT - 1] = 1;
+                            }
+                        }
+                        WriteBlocks();
+                        break;
+                    }
+                    case 0x0EE: {
+                        // Pop the PC off the stack and update PC
+                        registers.PC = static_cast<uint16_t>(stack.top());
+                        stack.pop();
                     }
                 }
-                WriteBlocks();
                 break;
             }
                 
