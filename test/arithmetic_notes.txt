@@ -54,3 +54,22 @@ Subtract routine:
 00001000 = 0x08
 
 VF = 1
+
+
+
+
+Random Notes
+
+C0ff
+
+Generates a random number and ANDs it with NN -> stores in V0
+
+
+c0f0
+
+11110000
+00000100
+
+00000000
+
+

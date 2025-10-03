@@ -253,6 +253,54 @@ int Emulator::Run() {
                 stack.push(static_cast<unsigned int>(registers.PC));
                 break;
             }
+            case 0x3: {
+                // 3XNN: will skip one instruction if VX == NN
+                // Get the value of VX
+                int xReg = (restOfInstr >> 8);
+                uint8_t xValue = GetGeneralRegisterValue(xReg);
+                
+                // Get Value of NN
+                int NN = restOfInstr & 0xff;
+                
+                // Check if equal to NN
+                if (xValue == NN) {
+                    // Update program counter
+                    registers.PC += 2;
+                }
+                
+                break;
+                
+            }
+            case 0x4: {
+                // 4XNN: will skip one instruction if VX != NN
+                // Get the value of VX
+                int xReg = (restOfInstr >> 8);
+                uint8_t xValue = GetGeneralRegisterValue(xReg);
+                
+                int NN = restOfInstr & 0xff;
+                
+                if (xValue != NN) {
+                    // Update program counter
+                    registers.PC += 2;
+                }
+                break;
+            }
+            case 0x5: {
+                // 5XY0: will skip one instruction if VX == VY
+                // Get the value of VX
+                int xReg = (restOfInstr >> 8);
+                uint8_t xValue = GetGeneralRegisterValue(xReg);
+                
+                // Get the value of VY
+                int yReg = (restOfInstr >> 4) & 0xf;
+                uint8_t yValue = GetGeneralRegisterValue(yReg);
+                // Check if equal
+                if (xValue == yValue) {
+                    registers.PC += 2;
+                }
+                
+                break;
+            }
             case 0x6: {
                 // handle opcode 6; Set register to Value
                 int registerNumber = restOfInstr >> 8; // Obtain the register from the restOfInstr
@@ -370,10 +418,34 @@ int Emulator::Run() {
                 
                 break;
             }
+            case 0x9: {
+                // 9XY0: will skip one instruction if VX != VY
+                int xReg = (restOfInstr >> 8);
+                uint8_t xValue = GetGeneralRegisterValue(xReg);
+                
+                // Get the value of VY
+                int yReg = (restOfInstr >> 4) & 0xf;
+                uint8_t yValue = GetGeneralRegisterValue(yReg);
+                // Check if not equal
+                if (xValue != yValue) {
+                    registers.PC += 2;
+                }
+                
+                break;
+            }
             case 0xA: {
                 // handle opcode A; Set register I to a value
                 registers.I = restOfInstr;
                 break;
+            }
+            case 0xB: {
+                // BXNN: jumps with offset, NN + V0 value
+                
+                // Get NN
+                uint16_t NNN = restOfInstr & 0xfff;
+                
+                registers.PC = NNN + registers.V0;
+                
             }
             case 0xC: {
                 // CXNN: Generates a random number, ANDs it with NN and then puts the value in VX
@@ -383,9 +455,11 @@ int Emulator::Run() {
                 
                 std::random_device rd;
                 std::mt19937 gen(rd());
-                std::uniform_int_distribution<> distrib(0, 15); // 8 bit number
+                std::uniform_int_distribution<> distrib(0, 255); // 8 bit number
 
                 int randomValue = distrib(gen);
+                
+                //std::cout << "Random Value: " << randomValue << std::endl;
                 
                 SetGeneralRegisterValue(xReg, static_cast<uint8_t>(randomValue & NN));
                 
