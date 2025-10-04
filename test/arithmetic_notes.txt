@@ -73,3 +73,62 @@ c0f0
 00000000
 
 
+
+
+
+Conditional Jump
+
+3XNN: will skip one instruction if VX == NN
+- To test I will load a value into VX and check if equal
+
+
+4XNN: will skip one instruction if VX != NN
+- Change NN to not equal VX
+
+5XY0: will skip one instruction if VX == VY
+
+9XY0: will skip one instruction if VX != VY
+
+
+3XNN Test (Done)
+    60cc // load value 0xcc into V0
+
+    30cc // Conditional jump if equal
+
+    60dd // Placeholder instruction: load value 0xdd into V0 (shouldn't be ran)
+
+    61cc // load value 0xcc into V1
+
+
+4XNN Test (Done)
+    60cc // load value 0xcc into V0
+
+    40cd // Conditional jump if not equal
+
+    60dd // Placeholder instruction: load value 0xdd into V0 (shouldn't be ran)
+
+    61cc // load value 0xcc into V1
+
+
+5XY0 Test
+    60cc // load value 0xcc into V0
+    
+    61cc // load value 0xcc into V1
+
+    5010 // Conditional jump if equal
+
+    60dd // Placeholder instruction: load value 0xdd into V0 (shouldn't be ran)
+
+    62aa // load value 0xcc into V1
+
+
+9XY0 Test
+    60cc // load value 0xcc into V0
+    
+    61cd // load value 0xcc into V1
+
+    9010 // Conditional jump if not equal
+
+    60dd // Placeholder instruction: load value 0xdd into V0 (shouldn't be ran)
+
+    62aa // load value 0xcc into V1
