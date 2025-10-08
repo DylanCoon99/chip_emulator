@@ -15,6 +15,7 @@
 #include <bitset>
 #include <random>
 #include <stack>
+#include <ncurses.h>
 //#include "Display.h"
 #include "Registers.h"
 #include </opt/homebrew/include/SDL2/SDL.h>
@@ -41,6 +42,10 @@ const uint8_t SPACING        = 20;
 
 const uint16_t ABSOLUTE_HEIGHT = DISPLAY_HEIGHT * SPACING;
 const uint16_t ABSOLUTE_WIDTH  = DISPLAY_WIDTH  * SPACING;
+
+// Timer shit
+const unsigned int DELAY  = 60;    // 60 Hz
+auto lastTimerUpdate = std::chrono::high_resolution_clock::now();
 
 
 /* Address Space Layout (4096 bytes)
@@ -79,6 +84,9 @@ public:
     std::stack<unsigned int> stack;   // used for pushing the current program counter to
     Registers registers;
     bool debugFlag;
+    uint8_t delayTimer;
+    uint8_t soundTimer;
+
     
     // Methods
     int LoadROM(std::string& filePath);
@@ -87,7 +95,6 @@ public:
     void SetGeneralRegisterValue(int registerNumber, uint8_t value);
     uint8_t GetGeneralRegisterValue(int registerNumber);
     int Run();
-    
     
     
     //Display attributes;
@@ -105,6 +112,13 @@ public:
         addressSpaceSize = size;
         
         debugFlag = debug;
+        
+        delayTimer = 0xff;
+        soundTimer = 0xff;
+        
+        //initscr();
+        
+        //nodelay(stdscr, TRUE);
         
         // Initialize the address space
         addressSpace = new int[addressSpaceSize];
@@ -174,7 +188,7 @@ int Emulator::Run() {
     std::cout << "Successfully Created Renderer!" << std::endl;
     
 
-    // * LOOP NEEDS TO RUN AT 60Hz (60 cycles a second / 60 iterations a second)
+    
     
     int running = 1;
     SDL_Event event;
@@ -217,7 +231,6 @@ int Emulator::Run() {
         switch(opCode) {
             // Starting off with these 6 basic instructions (clear screen, jump, set register, add value to register, set register I, draw to display)
             case 0x0: {
-                
                 
                 switch(restOfInstr) {
                     case 0x0E0: {
@@ -445,6 +458,7 @@ int Emulator::Run() {
                 uint16_t NNN = restOfInstr & 0xfff;
                 
                 registers.PC = NNN + registers.V0;
+                break;
                 
             }
             case 0xC: {
@@ -462,6 +476,7 @@ int Emulator::Run() {
                 //std::cout << "Random Value: " << randomValue << std::endl;
                 
                 SetGeneralRegisterValue(xReg, static_cast<uint8_t>(randomValue & NN));
+                break;
                 
             }
             case 0xD: {
@@ -524,6 +539,42 @@ int Emulator::Run() {
                 
                 break;
             }
+            case 0xE: {
+            
+                int xReg = (restOfInstr >> 8);
+                uint8_t xValue = GetGeneralRegisterValue(xReg);
+                
+                uint8_t fCode = currentInstr & 0xff;
+                
+                switch(fCode) {
+                    case 0x9e: {
+                        // EX9E: skips one instruction if the key pressed matches value in VX
+                        
+                        int ch = getch();
+                        
+                        std::cout << ch << std::endl;
+                        
+                        if (ch == static_cast<int>(xValue)) { // Check if a key has been pressed
+                            
+                            std::cout << "You pressed the value of VX." << std::endl;
+                            
+                        }
+                        
+                        
+                        break;
+                    }
+                    case 0xa1: {
+                        // EXA1: skips one instruction if the key pressed does not match value in VX
+                        
+                        
+                        break;
+                    }
+                }
+                
+                
+                
+                break;
+            }
             case 0xF: {
                 
                 
@@ -560,10 +611,32 @@ int Emulator::Run() {
         WriteBlocks();
         SDL_RenderPresent(renderer);
          
-        // wait for 1/60 seconds
+        // handle timers
+        auto now = std::chrono::high_resolution_clock::now();
+            std::chrono::duration<float> elapsed = now - lastTimerUpdate;
+            if (elapsed.count() >= 1.0f / 60.0f) {
+                if (delayTimer > 0) delayTimer--;
+                if (soundTimer > 0) {
+                    soundTimer--;
+                    if (soundTimer > 0) {
+                        // Beep on
+                    } else {
+                        // Beep off
+                    }
+                }
+                lastTimerUpdate = now;
+            }
+        
+        
+        // wait
         std::this_thread::sleep_for(std::chrono::seconds(1 / CLOCK_SPEED));
         if (debugFlag) {
+            // Display the values of the timers
+            std::cout << "Delay Timer: " << static_cast<int>(delayTimer) << std::endl;
+            std::cout << "Sound Timer: " << static_cast<int>(soundTimer) << std::endl;
+            // Display the registers
             DisplayRegisters();
+            
             std::cout << "Enter for next loop iteration" << std::endl;
             std::cin >> running;
         }
