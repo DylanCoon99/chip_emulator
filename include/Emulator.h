@@ -597,6 +597,21 @@ int Emulator::Run() {
                         registers.I = address;
                         break;
                     }
+                    case 0x07: {
+                        // FX07 sets VX to the current value of the delay timer
+                        SetGeneralRegisterValue(xReg, delayTimer);
+                        break;
+                    }
+                    case 0x15: {
+                        // FX15 sets the delay timer to the value in VX
+                        delayTimer = xValue;
+                        break;
+                    }
+                    case 0x18: {
+                        // FX18 sets the sound timer to the value in VX
+                        soundTimer = xValue;
+                        break;
+                    }
                 }
                 
                 break;
